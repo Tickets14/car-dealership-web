@@ -6,19 +6,6 @@ const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Response interceptor: unwrap data, handle 401 redirects
-apiClient.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        window.location.href = '/admin/login';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
 // Request interceptor: attach auth token if available
 apiClient.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
@@ -29,5 +16,21 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Response interceptor: unwrap data, handle 401 redirects for admin routes
+apiClient.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    if (error.response?.status === 401) {
+      const url = error.config?.url || '';
+      const isAdminRoute = url.includes('/admin');
+      if (isAdminRoute && typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+        window.location.href = '/admin/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default apiClient;

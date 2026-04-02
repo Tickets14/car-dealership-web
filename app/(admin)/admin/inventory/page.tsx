@@ -1,3 +1,9 @@
+import { AdminInventoryPage } from '@/components/admin/AdminInventoryPage';
+
+export const metadata = {
+  title: 'Inventory',
+};
+
 export default function InventoryPage() {
-  return <h1>Inventory</h1>;
+  return <AdminInventoryPage />;
 }

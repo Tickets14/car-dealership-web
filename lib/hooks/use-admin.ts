@@ -4,9 +4,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
 import type {
   Car,
-  Submission,
-  InboxMessage,
+  CarPhoto,
+  CarWithPhotos,
+  SellerSubmission,
+  SellerSubmissionWithPhotos,
+  Inquiry,
+  InquiryWithMessages,
   Testimonial,
+  Notification as NotificationType,
   PaginatedResponse,
 } from '@/lib/types';
 
@@ -18,17 +23,30 @@ export interface AdminCarFilters {
   status?: string;
   search?: string;
   sort?: string;
+  featured?: boolean;
+}
+
+export interface AdminCarListItem extends Car {
+  photos?: CarPhoto[];
+  thumbnail_url?: string | null;
+  photo_count?: number;
+  inquiry_count?: number;
+}
+
+export interface AdminCarMutationResponse {
+  id?: string;
+  data?: Car | CarWithPhotos;
 }
 
 export function useAdminCars(filters: AdminCarFilters = {}) {
-  return useQuery<PaginatedResponse<Car>>({
+  return useQuery<PaginatedResponse<AdminCarListItem>>({
     queryKey: ['admin', 'cars', filters],
     queryFn: () => apiClient.get('/admin/cars', { params: filters }),
   });
 }
 
 export function useAdminCar(id: string | undefined) {
-  return useQuery<Car>({
+  return useQuery<CarWithPhotos>({
     queryKey: ['admin', 'cars', id],
     queryFn: () => apiClient.get(`/admin/cars/${id}`),
     enabled: !!id,
@@ -37,8 +55,8 @@ export function useAdminCar(id: string | undefined) {
 
 export function useCreateCar() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: Partial<Car>) => apiClient.post('/admin/cars', data),
+  return useMutation<AdminCarMutationResponse, Error, Partial<Car> & Record<string, unknown>>({
+    mutationFn: (data) => apiClient.post('/admin/cars', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'cars'] });
     },
@@ -47,8 +65,12 @@ export function useCreateCar() {
 
 export function useUpdateCar() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Car> }) =>
+  return useMutation<
+    AdminCarMutationResponse,
+    Error,
+    { id: string; data: Partial<Car> & Record<string, unknown> }
+  >({
+    mutationFn: ({ id, data }) =>
       apiClient.patch(`/admin/cars/${id}`, data),
     onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'cars'] });
@@ -83,11 +105,57 @@ export function useUploadCarPhotos() {
   });
 }
 
+export function useReorderCarPhotos() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      photoOrder,
+    }: {
+      id: string;
+      photoOrder: Array<{ id: string; sort_order: number }>;
+    }) =>
+      apiClient.patch(`/admin/cars/${id}/photos`, {
+        photos: photoOrder,
+      }),
+    onSuccess: (_data, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'cars', id] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'cars'] });
+      queryClient.invalidateQueries({ queryKey: ['cars', id] });
+    },
+  });
+}
+
+export function useDeleteCarPhotos() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ids }: { id: string; ids: string[] }) =>
+      apiClient.delete(`/admin/cars/${id}/photos`, { data: { ids } }),
+    onSuccess: (_data, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'cars', id] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'cars'] });
+      queryClient.invalidateQueries({ queryKey: ['cars', id] });
+    },
+  });
+}
+
 export function useBulkUpdateCars() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: { ids: string[]; updates: Partial<Car> }) =>
       apiClient.patch('/admin/cars/bulk', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'cars'] });
+      queryClient.invalidateQueries({ queryKey: ['cars'] });
+    },
+  });
+}
+
+export function useBulkDeleteCars() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) =>
+      Promise.all(ids.map((id) => apiClient.delete(`/admin/cars/${id}`))),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'cars'] });
       queryClient.invalidateQueries({ queryKey: ['cars'] });
@@ -104,14 +172,14 @@ export interface AdminSubmissionFilters {
 }
 
 export function useAdminSubmissions(filters: AdminSubmissionFilters = {}) {
-  return useQuery<PaginatedResponse<Submission>>({
+  return useQuery<PaginatedResponse<SellerSubmission>>({
     queryKey: ['admin', 'submissions', filters],
     queryFn: () => apiClient.get('/admin/submissions', { params: filters }),
   });
 }
 
 export function useAdminSubmission(id: string | undefined) {
-  return useQuery<Submission>({
+  return useQuery<SellerSubmissionWithPhotos>({
     queryKey: ['admin', 'submissions', id],
     queryFn: () => apiClient.get(`/admin/submissions/${id}`),
     enabled: !!id,
@@ -126,7 +194,7 @@ export function useUpdateSubmission() {
       data,
     }: {
       id: string;
-      data: Partial<Submission>;
+      data: Partial<SellerSubmission>;
     }) => apiClient.patch(`/admin/submissions/${id}`, data),
     onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'submissions'] });
@@ -146,14 +214,14 @@ export interface AdminInquiryFilters {
 }
 
 export function useAdminInquiries(filters: AdminInquiryFilters = {}) {
-  return useQuery<PaginatedResponse<InboxMessage>>({
+  return useQuery<PaginatedResponse<Inquiry>>({
     queryKey: ['admin', 'inquiries', filters],
     queryFn: () => apiClient.get('/admin/inquiries', { params: filters }),
   });
 }
 
 export function useAdminInquiry(id: string | undefined) {
-  return useQuery<InboxMessage>({
+  return useQuery<InquiryWithMessages>({
     queryKey: ['admin', 'inquiries', id],
     queryFn: () => apiClient.get(`/admin/inquiries/${id}`),
     enabled: !!id,
@@ -168,7 +236,7 @@ export function useUpdateInquiry() {
       data,
     }: {
       id: string;
-      data: Partial<InboxMessage>;
+      data: Partial<Inquiry>;
     }) => apiClient.patch(`/admin/inquiries/${id}`, data),
     onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'inquiries'] });
@@ -190,16 +258,8 @@ export function useSendReply() {
 
 // ─── Notifications ───────────────────────────────────────────────────────────
 
-interface Notification {
-  id: string;
-  type: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
-}
-
 export function useAdminNotifications() {
-  return useQuery<Notification[]>({
+  return useQuery<NotificationType[]>({
     queryKey: ['admin', 'notifications'],
     queryFn: () => apiClient.get('/admin/notifications'),
   });
@@ -288,18 +348,24 @@ export function useUpdateSetting() {
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 
-interface DashboardData {
-  totalCars: number;
-  availableCars: number;
-  soldCars: number;
-  pendingSubmissions: number;
-  unreadInquiries: number;
-  recentActivity: Array<{
-    id: string;
-    type: string;
-    message: string;
-    createdAt: string;
-  }>;
+export interface DashboardActivity {
+  id: string;
+  type: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface DashboardData {
+  totalCars?: number;
+  activeListings?: number;
+  availableCars?: number;
+  soldCars?: number;
+  soldThisMonth?: number;
+  reservedCars?: number;
+  pendingSubmissions?: number;
+  unreadInquiries?: number;
+  newInquiriesToday?: number;
+  recentActivity?: DashboardActivity[];
 }
 
 export function useDashboard() {

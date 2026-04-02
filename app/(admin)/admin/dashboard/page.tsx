@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+import { AdminDashboardPage } from '@/components/admin/AdminDashboardPage';
+
+export const metadata: Metadata = {
+  title: 'Admin Dashboard',
+};
+
 export default function DashboardPage() {
-  return <h1>Dashboard</h1>;
+  return <AdminDashboardPage generatedAt={new Date().toISOString()} />;
 }

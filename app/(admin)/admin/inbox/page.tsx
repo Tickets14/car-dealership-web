@@ -1,3 +1,9 @@
+import { AdminInboxPage } from '@/components/admin/AdminInboxPage';
+
+export const metadata = {
+  title: 'Inbox',
+};
+
 export default function InboxPage() {
-  return <h1>Inbox</h1>;
+  return <AdminInboxPage />;
 }

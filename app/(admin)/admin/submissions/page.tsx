@@ -1,3 +1,9 @@
+import { AdminSubmissionsPage } from '@/components/admin/AdminSubmissionsPage';
+
+export const metadata = {
+  title: 'Seller Submissions',
+};
+
 export default function SubmissionsPage() {
-  return <h1>Submissions</h1>;
+  return <AdminSubmissionsPage />;
 }

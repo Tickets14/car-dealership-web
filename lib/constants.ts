@@ -111,6 +111,30 @@ export const ADMIN_CAR_STATUS_OPTIONS = [
   { value: 'sold', label: 'Sold' },
 ] as const;
 
+export const SUBMISSION_STATUS_OPTIONS = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'counter_offered', label: 'Counter Offered' },
+  { value: 'rejected', label: 'Rejected' },
+] as const;
+
+export const INQUIRY_TYPE_OPTIONS = [
+  { value: 'buyer_inquiry', label: 'Buyer Inquiry' },
+  { value: 'visit_request', label: 'Visit Request' },
+  { value: 'pre_qualification', label: 'Pre-Qualification' },
+  { value: 'seller_thread', label: 'Seller Thread' },
+] as const;
+
+export const INQUIRY_STATUS_OPTIONS = [
+  { value: 'new', label: 'New' },
+  { value: 'contacted', label: 'Contacted' },
+  { value: 'qualified', label: 'Qualified' },
+  { value: 'visit_scheduled', label: 'Visit Scheduled' },
+  { value: 'reserved', label: 'Reserved' },
+  { value: 'converted', label: 'Converted' },
+  { value: 'lost', label: 'Lost' },
+] as const;
+
 export const ADMIN_CONDITION_RATING_OPTIONS = [
   { value: 'excellent', label: 'Excellent' },
   { value: 'good', label: 'Good' },

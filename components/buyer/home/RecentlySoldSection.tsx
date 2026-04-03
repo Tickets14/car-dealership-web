@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import { useRecentlySoldCars } from '@/lib/hooks/use-cars';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Settings2 } from 'lucide-react';
 import type { Car, CarPhoto } from '@/lib/types';
@@ -29,12 +29,12 @@ function SoldCard({ car }: { car: Car & { photos?: CarPhoto[] } }) {
     <div className="overflow-hidden rounded-xl bg-card ring-1 ring-border">
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {photo ? (
-          <Image
+          <OptimizedImage
             src={photo.url}
             alt={title}
             fill
             className="object-cover grayscale"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 25vw"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground grayscale">
@@ -79,7 +79,7 @@ export function RecentlySoldSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-4">
           {isLoading
             ? Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="overflow-hidden rounded-xl ring-1 ring-border">

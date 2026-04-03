@@ -1,17 +1,31 @@
 'use client';
 
-import Image from 'next/image';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Trophy, X, MessageCircle, Settings2 } from 'lucide-react';
+import {
+  ArrowRight,
+  MessageCircle,
+  Settings2,
+  Trophy,
+  X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import { cn } from '@/lib/utils';
-import { WHATSAPP_NUMBER } from '@/lib/constants';
+import { useContactInfo } from '@/lib/hooks/use-settings';
+import { getCarWhatsAppLink } from '@/lib/dealership-links';
 import type { CarWithPhotos, ConditionRating } from '@/lib/types';
 
 interface CompareTableProps {
   cars: CarWithPhotos[];
   onRemove: (id: string) => void;
+}
+
+interface CompareMetric {
+  label: string;
+  render: (car: CarWithPhotos) => ReactNode;
+  winnerIndices?: number[];
 }
 
 const conditionRank: Record<ConditionRating, number> = {
@@ -21,7 +35,7 @@ const conditionRank: Record<ConditionRating, number> = {
   project: 1,
 };
 
-const conditionColors: Record<string, string> = {
+const conditionColors: Record<ConditionRating, string> = {
   excellent: 'bg-emerald-100 text-emerald-800',
   good: 'bg-blue-100 text-blue-800',
   fair: 'bg-amber-100 text-amber-800',
@@ -45,87 +59,171 @@ function getWinnerIndices(
   mode: 'lowest' | 'highest'
 ): number[] {
   if (values.length === 0) return [];
+
   const best = mode === 'lowest' ? Math.min(...values) : Math.max(...values);
-  const winners: number[] = [];
-  values.forEach((v, i) => {
-    if (v === best) winners.push(i);
-  });
-  // Only highlight if there's a clear winner (not all same)
-  if (winners.length === values.length) return [];
-  return winners;
+  const winners = values.reduce<number[]>((result, value, index) => {
+    if (value === best) result.push(index);
+    return result;
+  }, []);
+
+  return winners.length === values.length ? [] : winners;
 }
 
-interface RowProps {
+function CompareMetricCard({
+  label,
+  value,
+  isWinner,
+}: {
   label: string;
-  values: React.ReactNode[];
-  winnerIndices?: number[];
-}
-
-function CompareRow({ label, values, winnerIndices = [] }: RowProps) {
+  value: ReactNode;
+  isWinner: boolean;
+}) {
   return (
-    <div className="grid border-b last:border-b-0" style={{ gridTemplateColumns: `160px repeat(${values.length}, 1fr)` }}>
-      <div className="p-3 text-sm font-medium text-muted-foreground bg-muted/30 flex items-center">
-        {label}
+    <div
+      className={cn(
+        'rounded-xl border px-3 py-3',
+        isWinner && 'border-emerald-200 bg-emerald-50/60'
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          {label}
+        </p>
+        {isWinner && <Trophy className="size-3.5 shrink-0 text-emerald-600" />}
       </div>
-      {values.map((value, i) => (
-        <div
-          key={i}
-          className={cn(
-            'p-3 text-sm font-medium flex items-center gap-1.5',
-            winnerIndices.includes(i) && 'text-emerald-700 bg-emerald-50/50'
-          )}
-        >
-          {winnerIndices.includes(i) && (
-            <Trophy className="size-3.5 text-emerald-600 shrink-0" />
-          )}
-          {value}
-        </div>
-      ))}
+      <div className="mt-1 text-sm font-medium">{value}</div>
     </div>
   );
 }
 
 export function CompareTable({ cars, onRemove }: CompareTableProps) {
+  const { whatsappNumber } = useContactInfo();
   const priceWinners = getWinnerIndices(
-    cars.map((c) => c.price_cash),
+    cars.map((car) => car.price_cash),
     'lowest'
   );
   const mileageWinners = getWinnerIndices(
-    cars.map((c) => c.mileage),
+    cars.map((car) => car.mileage),
     'lowest'
   );
   const yearWinners = getWinnerIndices(
-    cars.map((c) => c.year),
+    cars.map((car) => car.year),
     'highest'
   );
   const conditionWinners = getWinnerIndices(
-    cars.map((c) => conditionRank[c.condition_rating] ?? 0),
+    cars.map((car) => conditionRank[car.condition_rating] ?? 0),
     'highest'
   );
 
-  return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[600px]">
-        {/* Header: photos + titles + remove buttons */}
-        <div
-          className="grid border-b"
-          style={{ gridTemplateColumns: `160px repeat(${cars.length}, 1fr)` }}
+  const metrics: CompareMetric[] = [
+    {
+      label: 'Price',
+      render: (car) => formatPrice(car.price_cash),
+      winnerIndices: priceWinners,
+    },
+    {
+      label: 'Year',
+      render: (car) => String(car.year),
+      winnerIndices: yearWinners,
+    },
+    {
+      label: 'Mileage',
+      render: (car) => formatMileage(car.mileage, car.mileage_unit),
+      winnerIndices: mileageWinners,
+    },
+    {
+      label: 'Condition',
+      render: (car) => (
+        <Badge
+          className={cn(
+            'border-0 text-[11px]',
+            conditionColors[car.condition_rating]
+          )}
         >
-          <div className="p-3" />
-          {cars.map((car) => {
-            const photo = car.photos?.[0];
-            const title = `${car.year} ${car.make} ${car.model}`;
-            return (
-              <div key={car.id} className="p-3 space-y-3">
+          {car.condition_rating}
+        </Badge>
+      ),
+      winnerIndices: conditionWinners,
+    },
+    {
+      label: 'Transmission',
+      render: (car) => <span className="capitalize">{car.transmission}</span>,
+    },
+    {
+      label: 'Fuel Type',
+      render: (car) => <span className="capitalize">{car.fuel_type}</span>,
+    },
+    {
+      label: 'Body Type',
+      render: (car) => <span className="capitalize">{car.body_type || 'N/A'}</span>,
+    },
+    {
+      label: 'Color',
+      render: (car) => car.color || 'N/A',
+    },
+    {
+      label: 'Engine',
+      render: (car) => car.engine_displacement || 'N/A',
+    },
+    {
+      label: 'Drivetrain',
+      render: (car) => car.drivetrain || 'N/A',
+    },
+    {
+      label: 'Seats',
+      render: (car) => (car.seats ? String(car.seats) : 'N/A'),
+    },
+    {
+      label: 'Plate Ending',
+      render: (car) => car.plate_ending || 'N/A',
+    },
+  ];
+
+  return (
+    <div
+      className="overflow-x-auto focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      tabIndex={0}
+      aria-label="Comparison table"
+      onKeyDown={(event) => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
+          return;
+        }
+
+        event.preventDefault();
+        event.currentTarget.scrollBy({
+          left: event.key === 'ArrowRight' ? 320 : -320,
+          behavior: 'smooth',
+        });
+      }}
+    >
+      <div className="flex min-w-full gap-4 snap-x snap-mandatory px-4 py-4 sm:px-6">
+        {cars.map((car, index) => {
+          const photo = car.photos?.[0];
+          const title = `${car.year} ${car.make} ${car.model}`;
+          const fullTitle = car.variant ? `${title} ${car.variant}` : title;
+          const whatsappUrl = getCarWhatsAppLink({
+            phoneNumber: whatsappNumber,
+            carId: car.id,
+            carName: fullTitle,
+            stockNumber: car.stock_number,
+            priceCash: car.price_cash,
+          });
+
+          return (
+            <article
+              key={car.id}
+              className="flex min-w-[280px] basis-[280px] snap-start flex-col rounded-2xl border bg-card shadow-sm"
+            >
+              <div className="space-y-4 p-4">
                 <div className="relative">
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-muted">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted">
                     {photo ? (
-                      <Image
+                      <OptimizedImage
                         src={photo.url}
                         alt={photo.alt_text || title}
                         fill
                         className="object-cover"
-                        sizes="(max-width: 640px) 50vw, 33vw"
+                        sizes="(max-width: 640px) 80vw, 280px"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -135,136 +233,68 @@ export function CompareTable({ cars, onRemove }: CompareTableProps) {
                   </div>
                   <button
                     onClick={() => onRemove(car.id)}
-                    className="absolute -top-1.5 -right-1.5 rounded-full bg-destructive p-1 text-white shadow-sm hover:bg-destructive/90 transition-colors"
+                    className="absolute right-2 top-2 rounded-full bg-black/65 p-1 text-white transition-colors hover:bg-black/80"
                     aria-label={`Remove ${title} from comparison`}
                   >
                     <X className="size-3.5" />
                   </button>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-sm leading-tight">
+
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold leading-tight">
                     {title}
                   </h3>
                   {car.variant && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-sm text-muted-foreground">
                       {car.variant}
                     </p>
                   )}
+                  <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                    Stock #{car.stock_number}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {metrics.map((metric) => (
+                    <CompareMetricCard
+                      key={metric.label}
+                      label={metric.label}
+                      value={metric.render(car)}
+                      isWinner={metric.winnerIndices?.includes(index) ?? false}
+                    />
+                  ))}
                 </div>
               </div>
-            );
-          })}
-        </div>
 
-        {/* Comparison rows */}
-        <CompareRow
-          label="Price"
-          values={cars.map((c) => formatPrice(c.price_cash))}
-          winnerIndices={priceWinners}
-        />
-        <CompareRow
-          label="Year"
-          values={cars.map((c) => String(c.year))}
-          winnerIndices={yearWinners}
-        />
-        <CompareRow
-          label="Mileage"
-          values={cars.map((c) => formatMileage(c.mileage, c.mileage_unit))}
-          winnerIndices={mileageWinners}
-        />
-        <CompareRow
-          label="Condition"
-          values={cars.map((c) => (
-            <Badge
-              key={c.id}
-              className={cn(
-                'text-[11px] border-0',
-                conditionColors[c.condition_rating]
-              )}
-            >
-              {c.condition_rating}
-            </Badge>
-          ))}
-          winnerIndices={conditionWinners}
-        />
-        <CompareRow
-          label="Transmission"
-          values={cars.map((c) => (
-            <span key={c.id} className="capitalize">{c.transmission}</span>
-          ))}
-        />
-        <CompareRow
-          label="Fuel Type"
-          values={cars.map((c) => (
-            <span key={c.id} className="capitalize">{c.fuel_type}</span>
-          ))}
-        />
-        <CompareRow
-          label="Body Type"
-          values={cars.map((c) => (
-            <span key={c.id} className="capitalize">{c.body_type || '—'}</span>
-          ))}
-        />
-        <CompareRow
-          label="Color"
-          values={cars.map((c) => c.color || '—')}
-        />
-        <CompareRow
-          label="Engine"
-          values={cars.map((c) => c.engine_displacement || '—')}
-        />
-        <CompareRow
-          label="Drivetrain"
-          values={cars.map((c) => c.drivetrain || '—')}
-        />
-        <CompareRow
-          label="Seats"
-          values={cars.map((c) => (c.seats ? String(c.seats) : '—'))}
-        />
-        <CompareRow
-          label="Plate Ending"
-          values={cars.map((c) => c.plate_ending || '—')}
-        />
-
-        {/* CTAs */}
-        <div
-          className="grid border-t"
-          style={{ gridTemplateColumns: `160px repeat(${cars.length}, 1fr)` }}
-        >
-          <div className="p-3" />
-          {cars.map((car) => {
-            const title = `${car.year} ${car.make} ${car.model}`;
-            const whatsappUrl = WHATSAPP_NUMBER
-              ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi! I'm interested in the ${title} (Stock #${car.stock_number}). Is it still available?`)}`
-              : null;
-            return (
-              <div key={car.id} className="p-3 space-y-2">
+              <div className="mt-auto space-y-2 border-t bg-muted/20 p-4">
                 <Button
-                  className="w-full bg-primary-600 text-white hover:bg-primary-700 border-primary-600"
+                  className="w-full border-primary-600 bg-primary-600 text-white hover:bg-primary-700"
                   render={<Link href={`/cars/${car.id}`} />}
                 >
                   View Details
+                  <ArrowRight className="size-4" data-icon="inline-end" />
                 </Button>
                 {whatsappUrl && (
                   <Button
                     variant="outline"
-                    className="w-full text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                    className="w-full border-emerald-200 text-emerald-600 hover:bg-emerald-50"
                     render={
                       <a
                         href={whatsappUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`Inquire about ${fullTitle} on WhatsApp`}
                       />
                     }
                   >
                     <MessageCircle className="size-4" />
-                    Inquire
+                    Inquire on WhatsApp
                   </Button>
                 )}
               </div>
-            );
-          })}
-        </div>
+            </article>
+          );
+        })}
       </div>
     </div>
   );

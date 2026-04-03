@@ -149,4 +149,33 @@
   html {
     @apply font-sans;
   }
+  :focus-visible {
+    scroll-margin-top: 6rem;
+  }
+}
+
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  img {
+    break-inside: avoid;
+  }
+
+  [data-slot='dialog-overlay'],
+  [data-slot='sheet-overlay'] {
+    display: none !important;
+  }
 }

@@ -182,6 +182,7 @@ function FilterContent({ filters, setFilters, activeCount }: FilterContentProps)
             type="button"
             onClick={clearAll}
             className="text-xs font-medium text-primary-600 hover:underline"
+            aria-label="Clear all active filters"
           >
             Clear All
           </button>
@@ -190,16 +191,20 @@ function FilterContent({ filters, setFilters, activeCount }: FilterContentProps)
 
       {/* Search */}
       <div className="space-y-1.5">
-        <Label className="text-xs">Search</Label>
+        <Label htmlFor="car-filter-search" className="text-xs">
+          Search
+        </Label>
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            id="car-filter-search"
             placeholder="Search make, model..."
             value={filters.search}
             onChange={(e) =>
               setFilters({ search: e.target.value || null, page: 1 })
             }
             className="h-9 pl-9 text-sm"
+            aria-label="Search cars"
           />
         </div>
       </div>
@@ -218,14 +223,18 @@ function FilterContent({ filters, setFilters, activeCount }: FilterContentProps)
       {/* Model (text input, dependent on make) */}
       {filters.make.length > 0 && (
         <div className="space-y-1.5">
-          <Label className="text-xs">Model</Label>
+          <Label htmlFor="car-filter-model" className="text-xs">
+            Model
+          </Label>
           <Input
+            id="car-filter-model"
             placeholder="e.g. Civic, Vios..."
             value={filters.model}
             onChange={(e) =>
               setFilters({ model: e.target.value || null, page: 1 })
             }
             className="h-9 text-sm"
+            aria-label="Filter by model"
           />
         </div>
       )}
@@ -246,6 +255,7 @@ function FilterContent({ filters, setFilters, activeCount }: FilterContentProps)
           step={50000}
           value={price.value}
           onValueChange={price.onChange}
+          aria-label="Price range"
         />
       </div>
 
@@ -265,6 +275,7 @@ function FilterContent({ filters, setFilters, activeCount }: FilterContentProps)
           step={1}
           value={year.value}
           onValueChange={year.onChange}
+          aria-label="Year range"
         />
       </div>
 
@@ -273,18 +284,19 @@ function FilterContent({ filters, setFilters, activeCount }: FilterContentProps)
       {/* Body type */}
       <div className="space-y-2">
         <Label className="text-xs">Body Type</Label>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Body type filters">
           {BODY_TYPES.map((type) => (
             <button
               key={type}
               type="button"
               onClick={() => toggleArrayFilter('bodyType', type.toLowerCase())}
               className={cn(
-                'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
+                'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
                 filters.bodyType.includes(type.toLowerCase())
                   ? 'border-primary-600 bg-primary-600 text-white'
                   : 'border-border bg-background text-foreground hover:bg-muted'
               )}
+              aria-pressed={filters.bodyType.includes(type.toLowerCase())}
             >
               {type}
             </button>
@@ -330,6 +342,7 @@ function FilterContent({ filters, setFilters, activeCount }: FilterContentProps)
           step={5000}
           value={mileage.value}
           onValueChange={mileage.onChange}
+          aria-label="Mileage range"
         />
       </div>
 
@@ -364,7 +377,8 @@ function MakeMultiSelect({
         render={
           <button
             type="button"
-            className="flex h-9 w-full items-center justify-between rounded-lg border border-input bg-transparent px-2.5 text-sm transition-colors hover:bg-muted dark:bg-input/30"
+            className="flex h-9 w-full items-center justify-between rounded-lg border border-input bg-transparent px-2.5 text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+            aria-label="Select one or more makes"
           />
         }
       >
@@ -379,7 +393,7 @@ function MakeMultiSelect({
       </PopoverTrigger>
       <PopoverContent className="w-[240px] p-0" align="start">
         <Command>
-          <CommandInput placeholder="Search makes..." />
+          <CommandInput placeholder="Search makes..." aria-label="Search makes" />
           <CommandList>
             <CommandEmpty>No makes found.</CommandEmpty>
             <CommandGroup>
@@ -417,7 +431,7 @@ function CheckboxGroup({
   return (
     <div className="space-y-2">
       <Label className="text-xs">{label}</Label>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5" role="group" aria-label={label}>
         {options.map((option) => {
           const key = getKey(option);
           return (
@@ -459,7 +473,12 @@ export function FilterSheet(props: FilterContentProps) {
     <Sheet>
       <SheetTrigger
         render={
-          <Button variant="outline" size="sm" className="lg:hidden" />
+          <Button
+            variant="outline"
+            size="sm"
+            className="lg:hidden"
+            aria-label="Open filters"
+          />
         }
       >
         <SlidersHorizontal className="size-4" data-icon="inline-start" />
@@ -470,12 +489,15 @@ export function FilterSheet(props: FilterContentProps) {
           </Badge>
         )}
       </SheetTrigger>
-      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+      <SheetContent
+        side="bottom"
+        className="h-[100dvh] max-h-[100dvh] overflow-y-auto lg:h-auto lg:max-h-[85vh]"
+      >
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>
           <SheetDescription>Narrow down your search</SheetDescription>
         </SheetHeader>
-        <div className="px-4 pb-8">
+        <div className="px-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
           <FilterContent {...props} />
         </div>
       </SheetContent>

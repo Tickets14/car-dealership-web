@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Star, Fuel, Gauge, Settings2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import { cn } from '@/lib/utils';
 import type { Car, CarPhoto } from '@/lib/types';
 
@@ -51,16 +51,17 @@ export function CarCard({
           'block overflow-hidden rounded-xl bg-card shadow-sm ring-1 ring-border transition-all duration-200',
           'hover:-translate-y-1 hover:shadow-lg'
         )}
+        aria-label={`View details for ${title}`}
       >
         {/* Photo */}
-        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+          <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           {photo ? (
-            <Image
+            <OptimizedImage
               src={photo.url}
               alt={photo.alt_text || title}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              sizes="(max-width: 1023px) 100vw, (max-width: 1279px) 50vw, 33vw"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -138,7 +139,7 @@ export function CarCard({
         <label
           className={cn(
             'absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-md bg-white/90 px-2 py-1 text-xs font-medium text-foreground shadow-sm backdrop-blur-sm cursor-pointer transition-opacity',
-            'md:opacity-0 md:group-hover:opacity-100',
+            'md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100',
             isCompared && 'md:opacity-100'
           )}
           onClick={(e) => e.stopPropagation()}
@@ -147,6 +148,7 @@ export function CarCard({
             checked={isCompared}
             disabled={compareFull && !isCompared}
             onCheckedChange={() => onCompareToggle(car)}
+            aria-label={`${isCompared ? 'Remove' : 'Add'} ${title} ${car.variant ?? ''} to compare`}
           />
           Compare
         </label>

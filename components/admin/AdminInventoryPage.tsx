@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
@@ -21,7 +20,9 @@ import {
   Card,
   CardContent,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import {
   Select,
   SelectContent,
@@ -56,6 +57,159 @@ function resolveThumbnail(car: AdminCarListItem) {
   return orderedPhotos[0]?.url ?? null;
 }
 
+function MobileInventoryCardSkeleton() {
+  return (
+    <Card className="overflow-hidden shadow-sm">
+      <CardContent className="space-y-4 px-4 py-4">
+        <div className="flex gap-3">
+          <Skeleton className="h-20 w-28 rounded-2xl" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 rounded-2xl border bg-muted/20 p-3">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-12 w-full" />
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-10 flex-1" />
+          <Skeleton className="h-10 w-28" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function InventoryMobileCard({
+  car,
+  selected,
+  busy,
+  isBulkBusy,
+  onToggleSelected,
+  onToggleFeatured,
+}: {
+  car: AdminCarListItem;
+  selected: boolean;
+  busy: boolean;
+  isBulkBusy: boolean;
+  onToggleSelected: (id: string) => void;
+  onToggleFeatured: (car: AdminCarListItem) => void;
+}) {
+  const thumbnail = resolveThumbnail(car);
+
+  return (
+    <Card
+      className={`overflow-hidden shadow-sm ${selected ? 'border-primary-200 ring-2 ring-primary-100' : ''}`}
+    >
+      <CardContent className="space-y-4 px-4 py-4">
+        <div className="flex gap-3">
+          <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl bg-muted">
+            {thumbnail ? (
+              <OptimizedImage
+                src={thumbnail}
+                alt={`${car.year} ${car.make} ${car.model}`}
+                fill
+                className="object-cover"
+                sizes="112px"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                <CarFront className="size-5" />
+              </div>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                  Stock #{car.stock_number}
+                </p>
+                <h3 className="mt-1 text-base font-semibold leading-tight">
+                  {car.year} {car.make} {car.model}
+                </h3>
+                <p className="mt-1 truncate text-sm text-muted-foreground">
+                  {car.variant || 'No variant specified'}
+                </p>
+              </div>
+              <Checkbox
+                checked={selected}
+                onCheckedChange={() => onToggleSelected(car.id)}
+                aria-label={`Select ${car.stock_number}`}
+              />
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <StatusBadge status={car.status} />
+              <p className="text-xs text-muted-foreground capitalize">
+                {car.transmission} · {car.fuel_type}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 rounded-2xl border bg-muted/20 p-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              Cash Price
+            </p>
+            <p className="mt-1 text-sm font-medium">{formatPrice(car.price_cash)}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              Inquiries
+            </p>
+            <p className="mt-1 text-sm font-medium">{car.inquiry_count ?? 0}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              Listed
+            </p>
+            <p className="mt-1 text-sm font-medium">
+              {format(new Date(car.created_at), 'MMM d, yyyy')}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              Featured
+            </p>
+            <p className="mt-1 text-sm font-medium">
+              {car.is_featured ? 'Yes' : 'No'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1"
+            render={<Link href={`/admin/inventory/${car.id}/edit`} />}
+          >
+            Edit Listing
+          </Button>
+          <Button
+            type="button"
+            variant={car.is_featured ? 'default' : 'outline'}
+            disabled={busy || isBulkBusy}
+            onClick={() => onToggleFeatured(car)}
+          >
+            {busy ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Star className={`size-4 ${car.is_featured ? 'fill-current' : ''}`} />
+            )}
+            {car.is_featured ? 'Featured' : 'Feature'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function InventorySkeleton() {
   return (
     <div className="space-y-6">
@@ -75,22 +229,30 @@ function InventorySkeleton() {
         </CardContent>
       </Card>
 
-      <DataTable<AdminCarListItem>
-        columns={[
-          { id: 'photo', header: 'Photo', cell: () => null },
-          { id: 'stock', header: 'Stock #', cell: () => null },
-          { id: 'vehicle', header: 'Vehicle', cell: () => null },
-          { id: 'price', header: 'Price', cell: () => null },
-          { id: 'status', header: 'Status', cell: () => null },
-          { id: 'listed', header: 'Listed', cell: () => null },
-          { id: 'inquiries', header: 'Inquiries', cell: () => null },
-          { id: 'featured', header: 'Featured', cell: () => null },
-        ]}
-        data={[]}
-        getRowId={(row) => row.id}
-        loading
-        selectable
-      />
+      <div className="grid gap-4 lg:hidden">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <MobileInventoryCardSkeleton key={index} />
+        ))}
+      </div>
+
+      <div className="hidden lg:block">
+        <DataTable<AdminCarListItem>
+          columns={[
+            { id: 'photo', header: 'Photo', cell: () => null },
+            { id: 'stock', header: 'Stock #', cell: () => null },
+            { id: 'vehicle', header: 'Vehicle', cell: () => null },
+            { id: 'price', header: 'Price', cell: () => null },
+            { id: 'status', header: 'Status', cell: () => null },
+            { id: 'listed', header: 'Listed', cell: () => null },
+            { id: 'inquiries', header: 'Inquiries', cell: () => null },
+            { id: 'featured', header: 'Featured', cell: () => null },
+          ]}
+          data={[]}
+          getRowId={(row) => row.id}
+          loading
+          selectable
+        />
+      </div>
     </div>
   );
 }
@@ -143,6 +305,18 @@ export function AdminInventoryPage() {
   const selectedCount = selectedIds.size;
   const isBulkBusy =
     bulkUpdateCars.isPending || bulkDeleteCars.isPending || updateCar.isPending;
+
+  function handleToggleSelected(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
 
   useEffect(() => {
     setSelectedIds((current) => {
@@ -225,7 +399,7 @@ export function AdminInventoryPage() {
 
         return (
           <div className="relative h-14 w-18 overflow-hidden rounded-xl bg-muted">
-            <Image
+            <OptimizedImage
               src={thumbnail}
               alt={`${car.year} ${car.make} ${car.model}`}
               fill
@@ -485,28 +659,91 @@ export function AdminInventoryPage() {
             </div>
           )}
 
-          <DataTable
-            columns={columns}
-            data={cars}
-            getRowId={(row) => row.id}
-            loading={carsLoading}
-            selectable
-            selectedIds={selectedIds}
-            onSelectionChange={setSelectedIds}
-            sort={sort}
-            onSortChange={setSort}
-            pagination={
-              carsResponse
-                ? {
-                    page: carsResponse.page,
-                    totalPages: carsResponse.totalPages,
-                    total: carsResponse.total,
-                  }
-                : undefined
-            }
-            onPageChange={setPage}
-            emptyMessage="No listings match the current filters."
-          />
+          <div className="space-y-4 lg:hidden">
+            {cars.length === 0 ? (
+              <div className="rounded-3xl border border-dashed bg-muted/20 px-6 py-14 text-center">
+                <CarFront className="mx-auto size-10 text-muted-foreground/70" />
+                <p className="mt-4 text-lg font-medium">No listings found.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Adjust the filters or add a new inventory listing.
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {cars.map((car) => (
+                  <InventoryMobileCard
+                    key={car.id}
+                    car={car}
+                    selected={selectedIds.has(car.id)}
+                    busy={featuredBusyId === car.id}
+                    isBulkBusy={isBulkBusy}
+                    onToggleSelected={handleToggleSelected}
+                    onToggleFeatured={handleToggleFeatured}
+                  />
+                ))}
+              </div>
+            )}
+
+            {carsResponse && carsResponse.totalPages > 1 && (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-muted-foreground">
+                  {selectedCount > 0
+                    ? `${selectedCount} of ${carsResponse.total} selected`
+                    : `${carsResponse.total} total`}
+                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={carsResponse.page <= 1}
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    {carsResponse.page} / {carsResponse.totalPages}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={carsResponse.page >= carsResponse.totalPages}
+                    onClick={() =>
+                      setPage((current) =>
+                        Math.min(carsResponse.totalPages, current + 1)
+                      )
+                    }
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="hidden lg:block">
+            <DataTable
+              columns={columns}
+              data={cars}
+              getRowId={(row) => row.id}
+              loading={carsLoading}
+              selectable
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+              sort={sort}
+              onSortChange={setSort}
+              pagination={
+                carsResponse
+                  ? {
+                      page: carsResponse.page,
+                      totalPages: carsResponse.totalPages,
+                      total: carsResponse.total,
+                    }
+                  : undefined
+              }
+              onPageChange={setPage}
+              emptyMessage="No listings match the current filters."
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

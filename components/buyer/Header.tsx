@@ -14,7 +14,9 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { BUSINESS_NAME, WHATSAPP_NUMBER } from '@/lib/constants';
+import { BUSINESS_NAME } from '@/lib/constants';
+import { getWhatsAppLink } from '@/lib/dealership-links';
+import { useContactInfo } from '@/lib/hooks/use-settings';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
@@ -23,10 +25,18 @@ const NAV_LINKS = [
   { href: '/pre-qualify', label: 'Pre-Qualify' },
 ] as const;
 
-function WhatsAppButton({ className }: { className?: string }) {
-  const href = WHATSAPP_NUMBER
-    ? `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, '')}`
-    : '#';
+function WhatsAppButton({
+  className,
+  phoneNumber,
+}: {
+  className?: string;
+  phoneNumber: string;
+}) {
+  const href =
+    getWhatsAppLink(
+      phoneNumber,
+      'Hi! I would like to ask about your available cars.'
+    ) ?? '#';
 
   return (
     <Button
@@ -36,6 +46,7 @@ function WhatsAppButton({ className }: { className?: string }) {
       )}
       size="sm"
       render={<a href={href} target="_blank" rel="noopener noreferrer" />}
+      aria-label="Open WhatsApp inquiry"
     >
       <MessageCircle className="size-4" data-icon="inline-start" />
       WhatsApp Us
@@ -46,6 +57,9 @@ function WhatsAppButton({ className }: { className?: string }) {
 export function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const { contactInfo, whatsappNumber } = useContactInfo();
+  const phoneNumber = contactInfo.phone || whatsappNumber;
+  const emailAddress = contactInfo.email || 'info@autodeals.ph';
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -80,7 +94,9 @@ export function Header() {
               {link.label}
             </Link>
           ))}
-          <WhatsAppButton className="ml-3" />
+          {whatsappNumber && (
+            <WhatsAppButton className="ml-3" phoneNumber={whatsappNumber} />
+          )}
         </nav>
 
         {/* Mobile hamburger */}
@@ -120,22 +136,28 @@ export function Header() {
             </nav>
 
             <div className="mt-auto border-t border-white/10 p-4 space-y-3">
-              <WhatsAppButton className="w-full" />
-              {WHATSAPP_NUMBER && (
+              {whatsappNumber && (
+                <WhatsAppButton className="w-full" phoneNumber={whatsappNumber} />
+              )}
+              {(phoneNumber || emailAddress) && (
                 <div className="flex flex-col gap-2 text-sm text-white/70">
+                  {phoneNumber && (
+                    <a
+                      href={`tel:${phoneNumber}`}
+                      className="flex items-center gap-2 hover:text-white"
+                      aria-label={`Call ${phoneNumber}`}
+                    >
+                      <Phone className="size-3.5" />
+                      {phoneNumber}
+                    </a>
+                  )}
                   <a
-                    href={`tel:${WHATSAPP_NUMBER}`}
+                    href={`mailto:${emailAddress}`}
                     className="flex items-center gap-2 hover:text-white"
-                  >
-                    <Phone className="size-3.5" />
-                    {WHATSAPP_NUMBER}
-                  </a>
-                  <a
-                    href="mailto:info@autodeals.ph"
-                    className="flex items-center gap-2 hover:text-white"
+                    aria-label={`Email ${emailAddress}`}
                   >
                     <Mail className="size-3.5" />
-                    info@autodeals.ph
+                    {emailAddress}
                   </a>
                 </div>
               )}

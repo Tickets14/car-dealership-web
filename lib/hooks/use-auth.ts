@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
+import { toast } from 'sonner';
 
 interface Session {
   user: { id: string; email: string; name: string };
@@ -26,7 +27,11 @@ export function useLogin() {
     onSuccess: (data) => {
       localStorage.setItem('auth_token', data.token);
       queryClient.invalidateQueries({ queryKey: ['session'] });
+      toast.success('Signed in successfully.');
       router.push('/admin/dashboard');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Invalid email or password.');
     },
   });
 }
@@ -36,6 +41,12 @@ export function useLogout() {
   const router = useRouter();
   return useMutation({
     mutationFn: () => apiClient.post('/admin/auth/logout'),
+    onSuccess: () => {
+      toast.success('You have been signed out.');
+    },
+    onError: () => {
+      toast.error('Signed out locally after a logout error.');
+    },
     onSettled: () => {
       localStorage.removeItem('auth_token');
       queryClient.clear();

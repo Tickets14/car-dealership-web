@@ -9,6 +9,7 @@ import {
   PopoverHeader,
   PopoverTitle,
 } from '@/components/ui/popover';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   useAdminNotifications,
   useMarkNotificationsRead,
@@ -17,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
 export function NotificationBell() {
-  const { data: notifications = [] } = useAdminNotifications();
+  const { data: notifications = [], isLoading } = useAdminNotifications();
   const markRead = useMarkNotificationsRead();
 
   // Override refetchInterval on the query — we call it with 30s in the hook consumer
@@ -67,7 +68,17 @@ export function NotificationBell() {
         </PopoverHeader>
 
         <div className="max-h-80 overflow-y-auto">
-          {notifications.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-3 p-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="space-y-2 rounded-xl border p-3">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              ))}
+            </div>
+          ) : notifications.length === 0 ? (
             <p className="p-4 text-center text-sm text-muted-foreground">
               No notifications
             </p>

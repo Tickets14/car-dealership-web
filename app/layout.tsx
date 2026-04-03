@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { BUSINESS_NAME } from "@/lib/constants";
+import { getSiteUrl } from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,8 +18,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AutoDeals",
-  description: "Find your perfect car at AutoDeals",
+  metadataBase: new URL(getSiteUrl()),
+  applicationName: BUSINESS_NAME,
+  title: BUSINESS_NAME,
+  description: `Find your perfect car at ${BUSINESS_NAME}.`,
+  openGraph: {
+    siteName: BUSINESS_NAME,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({

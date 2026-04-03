@@ -9,10 +9,14 @@ export default function BuyerLayout({
 }) {
   return (
     <>
-      <Header />
+      <div className="print:hidden">
+        <Header />
+      </div>
       <main className="flex-1">{children}</main>
-      <Footer />
-      <CompareBar />
+      <div className="print:hidden">
+        <Footer />
+        <CompareBar />
+      </div>
     </>
   );
 }

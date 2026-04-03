@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { X, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import { useCompare } from '@/lib/hooks/use-compare';
 import { cn } from '@/lib/utils';
 
@@ -15,7 +15,7 @@ export function CompareBar() {
   return (
     <div
       className={cn(
-        'fixed bottom-0 inset-x-0 z-40 border-t bg-card/95 shadow-2xl backdrop-blur-md',
+        'fixed bottom-0 inset-x-0 z-40 min-h-[72px] border-t bg-card/95 shadow-2xl backdrop-blur-md',
         'animate-in slide-in-from-bottom-4 duration-300'
       )}
     >
@@ -27,12 +27,13 @@ export function CompareBar() {
               className="relative flex shrink-0 items-center gap-2 rounded-lg bg-muted px-3 py-1.5"
             >
               {car.photo ? (
-                <Image
+                <OptimizedImage
                   src={car.photo}
                   alt={`${car.year} ${car.make} ${car.model}`}
                   width={40}
                   height={30}
                   className="rounded object-cover"
+                  sizes="40px"
                 />
               ) : (
                 <div className="h-[30px] w-[40px] rounded bg-muted-foreground/10" />

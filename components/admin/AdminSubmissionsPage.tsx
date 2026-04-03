@@ -1,6 +1,5 @@
 ﻿'use client';
 
-import Image from 'next/image';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -44,6 +43,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import {
   CONDITION_CHECKS,
   CONTACT_METHODS,
@@ -625,7 +625,7 @@ export function AdminSubmissionsPage() {
                                 key={photo.id}
                                 className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted"
                               >
-                                <Image
+                                <OptimizedImage
                                   src={photo.url}
                                   alt={photo.label ?? `Submission photo ${index + 1}`}
                                   fill
@@ -746,7 +746,7 @@ export function AdminSubmissionsPage() {
       >
         <SheetContent
           side="right"
-          className="w-full gap-0 p-0 sm:max-w-none lg:w-[min(1100px,94vw)]"
+          className="h-[100dvh] w-full gap-0 p-0 lg:w-[min(1100px,94vw)] lg:max-w-none"
         >
           <div className="flex h-full min-h-0 flex-col">
             <SheetHeader className="border-b px-6 py-5">
@@ -1002,7 +1002,7 @@ export function AdminSubmissionsPage() {
                               className="overflow-hidden rounded-2xl border bg-card"
                             >
                               <div className="relative aspect-[4/3] bg-muted">
-                                <Image
+                                <OptimizedImage
                                   src={photo.url}
                                   alt={photo.label ?? `Submission photo ${index + 1}`}
                                   fill
@@ -1068,41 +1068,43 @@ export function AdminSubmissionsPage() {
           }
         }}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Submission</DialogTitle>
-            <DialogDescription>
-              Save the rejection reason for {rejectTarget?.reference_number} before notifying the
-              seller.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="h-[100dvh] max-w-none rounded-none p-0 lg:h-auto lg:max-w-lg lg:rounded-xl lg:p-4">
+          <div className="flex h-full flex-col">
+            <DialogHeader className="px-5 pt-6 lg:px-0 lg:pt-0">
+              <DialogTitle>Reject Submission</DialogTitle>
+              <DialogDescription>
+                Save the rejection reason for {rejectTarget?.reference_number} before notifying the
+                seller.
+              </DialogDescription>
+            </DialogHeader>
 
-          <div className="space-y-2">
-            <Label htmlFor="reject_reason">Reason</Label>
-            <Textarea
-              id="reject_reason"
-              rows={5}
-              value={rejectReason}
-              onChange={(event) => setRejectReason(event.target.value)}
-              placeholder="Explain why the submission was rejected."
-            />
+            <div className="flex-1 space-y-2 overflow-y-auto px-5 py-5 lg:px-0 lg:py-0">
+              <Label htmlFor="reject_reason">Reason</Label>
+              <Textarea
+                id="reject_reason"
+                rows={5}
+                value={rejectReason}
+                onChange={(event) => setRejectReason(event.target.value)}
+                placeholder="Explain why the submission was rejected."
+              />
+            </div>
+
+            <DialogFooter className="mx-0 mb-0 rounded-none px-5 py-4 lg:-mx-4 lg:-mb-4 lg:rounded-b-xl">
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={isMutating}
+                onClick={handleRejectSubmit}
+              >
+                {isMutating ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <XCircle className="size-4" />
+                )}
+                Reject Submission
+              </Button>
+            </DialogFooter>
           </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={isMutating}
-              onClick={handleRejectSubmit}
-            >
-              {isMutating ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <XCircle className="size-4" />
-              )}
-              Reject Submission
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -1116,53 +1118,55 @@ export function AdminSubmissionsPage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Send Counter-Offer</DialogTitle>
-            <DialogDescription>
-              Save a revised price and message for {counterTarget?.reference_number}.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="h-[100dvh] max-w-none rounded-none p-0 lg:h-auto lg:max-w-md lg:rounded-xl lg:p-4">
+          <div className="flex h-full flex-col">
+            <DialogHeader className="px-5 pt-6 lg:px-0 lg:pt-0">
+              <DialogTitle>Send Counter-Offer</DialogTitle>
+              <DialogDescription>
+                Save a revised price and message for {counterTarget?.reference_number}.
+              </DialogDescription>
+            </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="counter_price">Counter-Offer Price</Label>
-              <Input
-                id="counter_price"
-                type="number"
-                value={counterPrice}
-                onChange={(event) => setCounterPrice(event.target.value)}
-                placeholder="850000"
-              />
+            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5 lg:px-0 lg:py-0">
+              <div className="space-y-2">
+                <Label htmlFor="counter_price">Counter-Offer Price</Label>
+                <Input
+                  id="counter_price"
+                  type="number"
+                  value={counterPrice}
+                  onChange={(event) => setCounterPrice(event.target.value)}
+                  placeholder="850000"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="counter_message">Message</Label>
+                <Textarea
+                  id="counter_message"
+                  rows={5}
+                  value={counterMessage}
+                  onChange={(event) => setCounterMessage(event.target.value)}
+                  placeholder="Share the revised offer and next steps."
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="counter_message">Message</Label>
-              <Textarea
-                id="counter_message"
-                rows={5}
-                value={counterMessage}
-                onChange={(event) => setCounterMessage(event.target.value)}
-                placeholder="Share the revised offer and next steps."
-              />
-            </div>
+            <DialogFooter className="mx-0 mb-0 rounded-none px-5 py-4 lg:-mx-4 lg:-mb-4 lg:rounded-b-xl">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={isMutating}
+                onClick={handleCounterOfferSubmit}
+              >
+                {isMutating ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <BadgeDollarSign className="size-4" />
+                )}
+                Save Counter-Offer
+              </Button>
+            </DialogFooter>
           </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={isMutating}
-              onClick={handleCounterOfferSubmit}
-            >
-              {isMutating ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <BadgeDollarSign className="size-4" />
-              )}
-              Save Counter-Offer
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

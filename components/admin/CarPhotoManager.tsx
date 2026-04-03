@@ -1,9 +1,9 @@
 'use client';
 
-import Image from 'next/image';
 import { ImagePlus, MoveDown, MoveUp, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 
 export interface ExistingCarPhotoItem {
   id: string;
@@ -79,7 +79,7 @@ export function CarPhotoManager({
                   className="overflow-hidden rounded-2xl border bg-card"
                 >
                   <div className="relative aspect-[4/3] bg-muted">
-                    <Image
+                    <OptimizedImage
                       src={photo.url}
                       alt={photo.alt_text ?? `Car photo ${index + 1}`}
                       fill
@@ -145,7 +145,7 @@ export function CarPhotoManager({
                   className="overflow-hidden rounded-2xl border bg-card"
                 >
                   <div className="relative aspect-[4/3] bg-muted">
-                    <Image
+                    <OptimizedImage
                       src={photo.previewUrl}
                       alt={photo.file.name}
                       fill

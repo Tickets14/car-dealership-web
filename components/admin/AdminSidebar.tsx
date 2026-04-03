@@ -70,7 +70,7 @@ export function AdminSidebar() {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          'hidden shrink-0 border-r bg-card transition-[width] duration-200 md:flex md:flex-col',
+          'hidden shrink-0 border-r bg-card transition-[width] duration-200 lg:flex lg:flex-col',
           collapsed ? 'w-16' : 'w-56'
         )}
       >
@@ -114,7 +114,7 @@ export function AdminSidebar() {
       </aside>
 
       {/* Mobile bottom tab bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t bg-card md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
         {MOBILE_ITEMS.map((item) => {
           const active = pathname.startsWith(item.href);
           return (

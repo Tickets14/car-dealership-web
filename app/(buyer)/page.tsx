@@ -63,7 +63,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(251,191,36,0.08),transparent_60%)]" />
 
         <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-32">
-          <div className="max-w-2xl">
+          <div className="mx-auto max-w-3xl text-center">
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
               Find Your Next Car
             </h1>
@@ -72,13 +72,13 @@ export default function HomePage() {
               compare options, and drive home with confidence.
             </p>
 
-            <div className="mt-8">
+            <div className="mt-8 flex justify-center">
               <HeroSearchBar />
             </div>
 
-            <div className="mt-10 flex gap-8 sm:gap-12">
+            <div className="mt-10 flex flex-wrap justify-center gap-6 sm:gap-8">
               {STATS.map((stat) => (
-                <div key={stat.label}>
+                <div key={stat.label} className="min-w-28">
                   <p className="text-2xl font-bold sm:text-3xl">{stat.value}</p>
                   <p className="text-sm text-white/60">{stat.label}</p>
                 </div>

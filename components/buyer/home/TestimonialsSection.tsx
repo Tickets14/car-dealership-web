@@ -7,8 +7,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function TestimonialsSection() {
   const { data: testimonials, isLoading } = useTestimonials();
+  const testimonialList = testimonials ?? [];
 
-  if (!isLoading && (!testimonials || testimonials.length === 0)) return null;
+  if (!isLoading && testimonialList.length === 0) return null;
 
   return (
     <section className="py-16 sm:py-20">
@@ -40,7 +41,7 @@ export function TestimonialsSection() {
                   <Skeleton className="h-16 w-full" />
                 </div>
               ))
-            : testimonials?.map((t) => (
+            : testimonialList.map((t) => (
                 <div
                   key={t.id}
                   className="rounded-xl bg-card p-6 ring-1 ring-border"

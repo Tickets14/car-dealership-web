@@ -30,6 +30,7 @@ function CarCardSkeleton() {
 export function FeaturedCarsSection() {
   const { data: cars, isLoading } = useFeaturedCars();
   const { isInCompare, addToCompare, removeFromCompare, isFull } = useCompare();
+  const featuredCars = cars ?? [];
 
   return (
     <section className="py-16 sm:py-20">
@@ -57,7 +58,7 @@ export function FeaturedCarsSection() {
             ? Array.from({ length: 4 }).map((_, i) => (
                 <CarCardSkeleton key={i} />
               ))
-            : cars?.map((car) => (
+            : featuredCars.map((car) => (
                 <div key={car.id} className="w-[280px] shrink-0 sm:w-[300px]">
                   <CarCard
                     car={car}

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
+import { normalizeTestimonialsPayload } from '@/lib/testimonials';
 import type {
   Car,
   CarPhoto,
@@ -336,9 +337,10 @@ export function useMarkNotificationsRead() {
 // ─── Testimonials ────────────────────────────────────────────────────────────
 
 export function useAdminTestimonials() {
-  return useQuery<Testimonial[]>({
+  return useQuery<unknown, Error, Testimonial[]>({
     queryKey: ['admin', 'testimonials'],
     queryFn: () => apiClient.get('/admin/testimonials'),
+    select: normalizeTestimonialsPayload,
   });
 }
 

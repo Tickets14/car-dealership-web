@@ -124,7 +124,7 @@ export default function CarsPage() {
             <FilterSheet {...filterProps} />
             <p className="text-sm text-muted-foreground">
               {isLoading ? (
-                <Skeleton className="inline-block h-4 w-20" />
+                <Skeleton as="span" className="inline-block h-4 w-20" />
               ) : (
                 <>
                   <span className="font-medium text-foreground">{total}</span>{' '}

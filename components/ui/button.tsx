@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -42,19 +43,48 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
-  return (
-    <ButtonPrimitive
-      data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+type ButtonProps = ButtonPrimitive.Props & VariantProps<typeof buttonVariants>
+
+function resolveNativeButton(
+  render: ButtonPrimitive.Props["render"],
+  nativeButton: ButtonPrimitive.Props["nativeButton"]
+) {
+  if (nativeButton !== undefined) {
+    return nativeButton
+  }
+
+  if (!render) {
+    return true
+  }
+
+  return React.isValidElement(render) && render.type === "button"
 }
+
+const Button = React.forwardRef<React.ElementRef<typeof ButtonPrimitive>, ButtonProps>(
+  function Button(
+    {
+      className,
+      variant = "default",
+      size = "default",
+      nativeButton,
+      render,
+      ...props
+    },
+    ref
+  ) {
+    return (
+      <ButtonPrimitive
+        ref={ref}
+        data-slot="button"
+        className={cn(buttonVariants({ variant, size, className }))}
+        nativeButton={resolveNativeButton(render, nativeButton)}
+        render={render}
+        {...props}
+      />
+    )
+  }
+)
+
+Button.displayName = "Button"
 
 export { Button, buttonVariants }

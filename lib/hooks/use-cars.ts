@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
 import type { Car, CarWithPhotos, PaginatedResponse } from '@/lib/types';
+import { normalizeCarListPayload } from '@/lib/cars';
 
 export interface CarFilters {
   page?: number;
@@ -36,15 +37,17 @@ export function useCar(id: string | undefined) {
 }
 
 export function useFeaturedCars() {
-  return useQuery<Car[]>({
+  return useQuery<unknown, Error, Car[]>({
     queryKey: ['cars', 'featured'],
     queryFn: () => apiClient.get('/cars/featured'),
+    select: normalizeCarListPayload,
   });
 }
 
 export function useRecentlySoldCars() {
-  return useQuery<Car[]>({
+  return useQuery<unknown, Error, Car[]>({
     queryKey: ['cars', 'recently-sold'],
     queryFn: () => apiClient.get('/cars/recently-sold'),
+    select: normalizeCarListPayload,
   });
 }

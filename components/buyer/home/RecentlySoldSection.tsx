@@ -64,8 +64,9 @@ function SoldCard({ car }: { car: Car & { photos?: CarPhoto[] } }) {
 
 export function RecentlySoldSection() {
   const { data: cars, isLoading } = useRecentlySoldCars();
+  const soldCars = cars ?? [];
 
-  if (!isLoading && (!cars || cars.length === 0)) return null;
+  if (!isLoading && soldCars.length === 0) return null;
 
   return (
     <section className="py-16 sm:py-20 bg-muted/30">
@@ -91,7 +92,7 @@ export function RecentlySoldSection() {
                   </div>
                 </div>
               ))
-            : cars?.slice(0, 4).map((car) => (
+            : soldCars.slice(0, 4).map((car) => (
                 <SoldCard key={car.id} car={car} />
               ))}
         </div>
